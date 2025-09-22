@@ -1,0 +1,15 @@
+{
+  "name": "job-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "axios": "^1.7.9",
+    "express": "^4.19.2",
+    "html-to-text": "^9.0.5",
+    "jsdom": "^24.0.0",
+    "playwright": "^1.55.0",
+    "puppeteer": "^24.22.0",
+    "xml2js": "^0.6.2"
+  }
+}
