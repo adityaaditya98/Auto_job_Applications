@@ -78,7 +78,7 @@ async function fetchJobDetails(count){
       const location = el.querySelector(".icon--pin .element")?.innerText.trim() || "N/A";
       const date = el.querySelector(".icon--calendar time")?.getAttribute("datetime") || "N/A";
       return { title, company, location, date, link };
-    })
+    }).filter(job => job.date !== "Old" && job.date !== "N/A")
   );
 //   console.log(jobs);
   await browser.close();
