@@ -15,6 +15,7 @@ app.get('/fetch',async (req, res) => {
         mainData.push(...value);
         }
         console.log(mainData);
+        console.log("Job listings fetched and stored.");
         return res.status(200).json({message: "Data fetched successfully"});
     }catch(err){
         return res.status(500).json({message: "Error fetching data", error: err.message});
