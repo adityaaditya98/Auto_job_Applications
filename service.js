@@ -3,7 +3,7 @@ async function getJobDetailsInformation(url){
     console.log("Scraping job details...");
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle" });
+    await page.goto(url, { waitUntil: "networkidle",timeout:60000000 });
 
     // Wait for the main container
     await page.waitForSelector('.container.container--indent .detail-page');

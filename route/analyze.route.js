@@ -1,26 +1,42 @@
 import express from "express";
 import { jobAnalysisQueue } from "../jobQueue.js";
 import { candidateProfile } from "../candidateDescription.js";
+import demo from "../demo.js";
 
 const router = express.Router();
 
-router.post("/analyze-job", async (req, res) => {
+// Accepts either { allJobDetails: [...] } or { jobData: {...} }
+// Will enqueue one job per entry provided. Falls back to demo if no body provided.
+router.post("/analyze-jobs", async (req, res) => {
+  console.log("Received request to analyze jobs.");
   try {
-    const { jobData } = req.body;
+    const { allJobDetails, jobData } = demo;
 
-    if (!jobData) {
-      return res.status(400).json({ error: "jobData is required" });
+    let jobsToQueue = [];
+    if (jobData) {
+      jobsToQueue = Array.isArray(jobData) ? jobData : [jobData];
+    } else if (allJobDetails) {
+      jobsToQueue = Array.isArray(allJobDetails) ? allJobDetails : [allJobDetails];
+    } else if (demo) {
+      jobsToQueue = [demo];
     }
 
-    const job = await jobAnalysisQueue.add("analyze", {
-      candidateProfile,
-      jobData
-    });
+    if (jobsToQueue.length === 0) {
+      return res.status(400).json({ error: "No job data provided" });
+    }
 
-    res.status(202).json({
-      message: "Job analysis queued",
-      jobId: job.id
-    });
+    const queued = [];
+    for (const jd of jobsToQueue) {
+      console.log("Queueing job analysis task for job.");
+      const job = await jobAnalysisQueue.add("analyze", {
+        candidateProfile,
+        jobData: jd
+      });
+      queued.push({ jobId: job.id });
+      console.log("Job analysis task queued with ID:", job.id);
+    }
+
+    res.status(202).json({ message: "Job analysis queued", jobs: queued });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
