@@ -1,3 +1,15 @@
 /node_modules
 /.devcontainer
 /.env
+/env.local
+/.vscode
+.DS_Store
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/pnpm-debug.log*
+/dist
+/build
+/.next
+/out
+/coverage
