@@ -1,6 +1,11 @@
 import express from 'express';
 import axios from 'axios';
+import "dotenv/config";
 import { fetchJobDetails, getJobDetailsInformation } from './service.js';
+import { analyzeJobDescription } from './jobAnalyzer.js';
+
+import analyzeRoute from "./route/analyze.route.js";
+
 const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
@@ -38,6 +43,7 @@ app.get('/', async (req, res) => {
         return res.status(500).json({message: "Error fetching data", error: err.message});
     }
 });
+
 app.post("/testUrl", async (req, res) => {
     try {
         console.log("Received request to test URL.");
@@ -60,6 +66,8 @@ app.post("/testUrl", async (req, res) => {
         });
     }
 });
+
+app.get("/api", analyzeRoute);
 
 
 app.listen(PORT, () => {
