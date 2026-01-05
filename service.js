@@ -45,10 +45,16 @@ async function getJobDetailsInformation(url){
         };
     });
     console.log("Extracted job details.");
-    console.log(jobDetail);
-    if(jobDetail && Object.keys(jobDetail).length > 0 && jobDetail.contactEmail!=="N/A" && jobDetail.contactEmail!==""){
+    if(jobDetail!==null && jobDetail!==undefined){
+        if(jobDetail.contactEmail==='N/A' || jobDetail.contactEmail===null || jobDetail.contactEmail===undefined || jobDetail.contactEmail.length<5){
+            return {...jobDetail,
+                contactEmailInformation:false
+            }; 
+        }
         if(jobDetail.description.length>10){
-            return jobDetail;
+            return {...jobDetail,
+                contactEmailInformation:true
+            };
         }
     }
     await browser.close();
