@@ -2,7 +2,8 @@ import "dotenv/config";
 import { Worker } from "bullmq";
 import { connection } from "../redis.js";
 import { geminiModel } from "../gemini.js";
-
+import { promptResumeAnalysis } from "../prompt/resumeAnalysis.js";
+import { analyzeJob } from "../ai/ollamaClient.js";
 console.log("🚀 Gemini Job Analysis Worker started");
 
 new Worker(
@@ -12,23 +13,7 @@ new Worker(
     const { candidateProfile, jobData } = job.data;
   //  console.log("Job data:", jobData.length);
   //   console.log("Candidate profile length:", candidateProfile.length);
-    const prompt = `
-You are a recruiter AI.
-
-CANDIDATE_PROFILE (TEXT):
-${candidateProfile}
-
-JOB_DATA (TEST):
-${jobData}
-
-Return ONLY valid JSON in this format:
-{
-  "match_score": 0,
-  "apply_decision": "apply | skip",
-  "missing_skills": [],
-  "reason": ""
-}
-`;
+    const prompt = promptResumeAnalysis(candidateProfile, jobData);
 
     try {
       const result = await geminiModel.generateContent(prompt);
@@ -64,4 +49,13 @@ Return ONLY valid JSON in this format:
     concurrency: 1 // 🔑 VERY IMPORTANT
   }
 );
+
+new Worker("job-analysis-local", async (job) => {
+  const { candidateProfile, jobData } = job.data;
+  console.log("last-check job data:",jobData);
+  return await analyzeJob(candidateProfile, jobData);
+}, {
+  connection: connection,
+  concurrency: 1
+});
 

@@ -1,8 +1,6 @@
 import express from "express";
-import { jobAnalysisQueue } from "../jobQueue.js";
+import { jobAnalysisLocalQueue, jobAnalysisQueue } from "../jobQueue.js";
 import { candidateProfile } from "../candidateDescription.js";
-import demo from "../demo.js";
-import { all } from "axios";
 
 const router = express.Router();
 const queued = [];
@@ -23,6 +21,23 @@ router.post("/analyze-jobs", async (req, res) => {
     res.status(202).json({ message: "Job analysis queued", jobs: queued });
   } catch (err) {
     console.error("Error enqueueing job:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/analyze-jobs-local", async (req, res) => {
+  console.log("Received request to analyze jobs locally.");
+  try{
+    const jobData = req.body.allJobDetails;
+    console.log("checking job data:", jobData);
+    const job = await jobAnalysisLocalQueue.add("analyze-local", {
+      candidateProfile,
+      jobData,
+    });
+    queued.push({ jobId: job.id });
+    res.status(202).json({ message: "Job analysis queued (local)", jobs: queued });
+  } catch (err) {
+    console.error("Error analyzing job locally:", err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -5,7 +5,7 @@ import { fetchJobDetails, getJobDetailsInformation } from './service.js';
 import queueAdminRoute from './route/queue.route.js';
 import analyzeRoute from "./route/analyze.route.js";
 import "./works/jobAnalysis.worker.js";
-// import dummy from './dummy.json' assert { type: "json" };
+import dummy from './dummy.json' assert { type: "json" };
 const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
@@ -83,6 +83,30 @@ app.get("/analyzeJobs", async (req, res) => {
         // const response = await axios.post("http://localhost:3000/api/analyze-jobs", {
         //     allJobDetails,
         // });
+        console.log(response.data);
+        return res.status(200).json({ message: "Analysis request sent", data: response.data });
+    } catch (error) {
+        console.error("Error sending analysis request:", error.response ? error.response.data : error.message);
+        return res.status(500).json({ message: "Error sending analysis request", error: error.response ? error.response.data : error.message });
+    }
+})
+
+app.get("/analyzeJobsLocal", async (req, res) => {
+    console.log("Received request to analyze jobs.");
+    try {
+        // for(let i=0;i<allJobDetails.length;i++){
+        // const response = await axios.post("http://localhost:3000/api/analyze-jobs-local", {
+        //     jobDataDescription: allJobDetails[i].description,
+        // });
+        // }
+        let dummyData = [];
+        dummyData.push(dummy)
+        console.log(dummyData);
+        allJobDetails=dummyData;
+        console.log("all job details:",allJobDetails);
+        const response = await axios.post("http://localhost:3000/api/analyze-jobs-local", {
+            allJobDetails,
+        });
         console.log(response.data);
         return res.status(200).json({ message: "Analysis request sent", data: response.data });
     } catch (error) {
