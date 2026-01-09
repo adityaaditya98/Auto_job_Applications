@@ -9,7 +9,7 @@ console.log("🚀 Gemini Job Analysis Worker started");
 new Worker(
   "job-analysis",
   async (job) => {
-    // console.log("Processing job analysis for job ID:", job.id);
+    console.log("Processing job analysis for job ID:", job.id);
     const { candidateProfile, jobData } = job.data;
   //  console.log("Job data:", jobData.length);
   //   console.log("Candidate profile length:", candidateProfile.length);
@@ -52,7 +52,7 @@ new Worker(
 
 new Worker("job-analysis-local", async (job) => {
   const { candidateProfile, jobData } = job.data;
-  console.log("last-check job data:",jobData);
+  // console.log("last-check job data:",jobData);
   return await analyzeJob(candidateProfile, jobData);
 }, {
   connection: connection,

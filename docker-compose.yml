@@ -4,7 +4,7 @@ services:
   app:
     build: .
     container_name: node-app
-    command: npm install && npm start
+    command: sh -c "npm install && npm start"
     ports:
       - "3000:3000"
     environment:
@@ -12,20 +12,22 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=MyStrongPassword123
+      - OLLAMA_HOST=http://host.docker.internal:11434   # 👈 GPU Ollama runs outside devcontainer
     depends_on:
       - redis
     volumes:
-      - .:/usr/src/
-      - /usr/src/node_modules
-      
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
   redis:
     image: redis:7-alpine
     container_name: redis
-    command: [
-      "redis-server",
-      "--requirepass", "MyStrongPassword123",
-      "--appendonly", "yes"
-    ]
+    command:
+      [
+        "redis-server",
+        "--requirepass", "MyStrongPassword123",
+        "--appendonly", "yes"
+      ]
     ports:
       - "6379:6379"
     volumes:
@@ -33,3 +35,4 @@ services:
 
 volumes:
   redis-data:
+

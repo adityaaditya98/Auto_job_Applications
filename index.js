@@ -5,7 +5,7 @@ import { fetchJobDetails, getJobDetailsInformation } from './service.js';
 import queueAdminRoute from './route/queue.route.js';
 import analyzeRoute from "./route/analyze.route.js";
 import "./works/jobAnalysis.worker.js";
-import dummy from './dummy.json' assert { type: "json" };
+// import dummy from './dummy.json' assert { type: "json" };
 const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
@@ -19,7 +19,7 @@ app.get('/fetch',async (req, res) => {
         const value =await fetchJobDetails(i);
         mainData.push(...value);
         }
-        console.log(mainData);
+        // console.log(mainData);
         console.log("Job listings fetched and stored.");
         return res.status(200).json({message: "Data fetched successfully"});
     }catch(err){
@@ -37,7 +37,7 @@ app.get('/', async (req, res) => {
             allJobDetails.push( await getJobDetailsInformation(mainData[i].link));
         }
         console.log("All job details processed.");
-        console.log(allJobDetails);
+        // console.log(allJobDetails);
         return res.status(200).json({message: "Job details processed. Check server logs for details."});
     }catch(err){
         return res.status(500).json({message: "Error fetching data", error: err.message});
@@ -94,26 +94,27 @@ app.get("/analyzeJobs", async (req, res) => {
 app.get("/analyzeJobsLocal", async (req, res) => {
     console.log("Received request to analyze jobs.");
     try {
-        // for(let i=0;i<allJobDetails.length;i++){
-        // const response = await axios.post("http://localhost:3000/api/analyze-jobs-local", {
-        //     jobDataDescription: allJobDetails[i].description,
-        // });
-        // }
-        let dummyData = [];
-        dummyData.push(dummy)
-        console.log(dummyData);
-        allJobDetails=dummyData;
-        console.log("all job details:",allJobDetails);
+        for(let i=0;i<allJobDetails.length;i++){
         const response = await axios.post("http://localhost:3000/api/analyze-jobs-local", {
-            allJobDetails,
+            jobDataDescription: allJobDetails[i].description,
         });
-        console.log(response.data);
+        }
         return res.status(200).json({ message: "Analysis request sent", data: response.data });
     } catch (error) {
         console.error("Error sending analysis request:", error.response ? error.response.data : error.message);
         return res.status(500).json({ message: "Error sending analysis request", error: error.response ? error.response.data : error.message });
     }
 })
+
+app.get("/setAi", async (req, res) => {
+    try {
+        const response = await axios.get(process.env.OLLAMA_HOST + "/api/tags");
+        return res.status(200).json({ data: response.data });
+    } catch (err) {
+        console.error("Error in /setAi:", err.message);
+        return res.status(500).json({ error: err.message });
+    }
+});
 
 app.use("/api", analyzeRoute);
 app.use("/api", queueAdminRoute);

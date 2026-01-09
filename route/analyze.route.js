@@ -28,8 +28,8 @@ router.post("/analyze-jobs", async (req, res) => {
 router.post("/analyze-jobs-local", async (req, res) => {
   console.log("Received request to analyze jobs locally.");
   try{
-    const jobData = req.body.allJobDetails;
-    console.log("checking job data:", jobData);
+    const jobData = req.body.jobDataDescription;
+    // console.log("checking job data:", jobData);
     const job = await jobAnalysisLocalQueue.add("analyze-local", {
       candidateProfile,
       jobData,
