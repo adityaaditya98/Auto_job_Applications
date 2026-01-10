@@ -15,7 +15,7 @@ const mainData= [];
 app.get('/fetch',async (req, res) => {
     try{
         console.log("Received request to fetch job listings.");
-        for( let i=0;i<2;i++){
+        for( let i=0;i<1;i++){
         const value =await fetchJobDetails(i);
         mainData.push(...value);
         }
@@ -97,6 +97,7 @@ app.get("/analyzeJobsLocal", async (req, res) => {
         for(let i=0;i<allJobDetails.length;i++){
         const response = await axios.post("http://localhost:3000/api/analyze-jobs-local", {
             jobDataDescription: allJobDetails[i].description,
+            url: allJobDetails[i].url
         });
         }
         return res.status(200).json({ message: "Analysis request sent", data: response.data });

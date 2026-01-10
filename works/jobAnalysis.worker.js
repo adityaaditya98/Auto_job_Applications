@@ -51,9 +51,9 @@ new Worker(
 );
 
 new Worker("job-analysis-local", async (job) => {
-  const { candidateProfile, jobData } = job.data;
+  const { candidateProfile, jobData , url } = job.data;
   // console.log("last-check job data:",jobData);
-  return await analyzeJob(candidateProfile, jobData);
+  return await analyzeJob(candidateProfile, jobData , url);
 }, {
   connection: connection,
   concurrency: 1

@@ -1,6 +1,8 @@
 export const promptResumeAnalysis = (candidateProfile, jobData) => `
 You are an automated recruitment evaluation engine.
 
+Compare CANDIDATE_PROFILE and JOB_DATA using strict structured matching.
+
 CANDIDATE_PROFILE:
 ${candidateProfile}
 
@@ -8,12 +10,7 @@ JOB_DATA:
 ${jobData}
 
 Return ONE valid JSON object only.
-
-CRITICAL:
-- Never use trailing commas.
-- All arrays must be valid JSON.
-- All object values must be strings or arrays (no null).
-- Every field must exist even if empty.
+Never use markdown or code blocks.
 
 JSON SCHEMA:
 {
@@ -31,29 +28,33 @@ JSON SCHEMA:
   "reason": ""
 }
 
-Rules:
-- match_score integer 0-100.
-- apply_decision "apply" only if match_score >= 60.
-- missing_skills must be skills present in JOB_DATA but absent in CANDIDATE_PROFILE.
-- matched_fields arrays must contain only values present in BOTH texts.
-- reason must be one sentence, max 20 words.
-- Output must be parsable by JSON.parse() without modification.
-Output must be parsable by JSON.parse() without modification.
+MANDATORY DECISION RULES:
+- match_score integer 0–100.
+- apply_decision:
+    - "apply" ONLY if ALL are true:
+        1. At least 60% of JOB_DATA primary_skills appear in CANDIDATE_PROFILE.
+        2. Candidate education level is not lower than required.
+        3. Candidate meets or exceeds ALL language requirements stated in JOB_DATA.
+- missing_skills:
+    - include only skills explicitly mentioned in JOB_DATA but absent in CANDIDATE_PROFILE.
+- matched_fields:
+    - include ONLY values present in BOTH texts.
+- reason:
+    - exactly one sentence, max 20 words.
+- Never include trailing commas.
+- Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
+Output must be valid JSON parseable by JSON.parse().
 
-Output must be parsable by JSON.parse() without modification.
+LANGUAGE EVALUATION RULE:
+- If JOB_DATA mentions any required language with proficiency level (e.g., German B2, English C1, French Fluent, Spanish Native):
+    - treat missing or lower language level in CANDIDATE_PROFILE as a critical mismatch.
+    - in such case force apply_decision = "skip".
 
-Output must be parsable by JSON.parse() without modification.
-
-Output must be parsable by JSON.parse() without modification.
-
-Output must be parsable by JSON.parse() without modification.
-
-Output must be parsable by JSON.parse() without modification.
-
-Output must be parsable by JSON.parse() without modification.
-
-Output must be parsable by JSON.parse() without modification.
-
-Output must be parsable by JSON.parse() without modification.
 
 `

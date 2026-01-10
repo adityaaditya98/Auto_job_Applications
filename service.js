@@ -48,12 +48,14 @@ async function getJobDetailsInformation(url){
     if(jobDetail!==null && jobDetail!==undefined){
         if(jobDetail.contactEmail==='N/A' || jobDetail.contactEmail===null || jobDetail.contactEmail===undefined || jobDetail.contactEmail.length<5){
             return {...jobDetail,
-                contactEmailInformation:false
+                contactEmailInformation:false,
+                url
             }; 
         }
         if(jobDetail.description.length>10){
             return {...jobDetail,
-                contactEmailInformation:true
+                contactEmailInformation:true,
+                url
             };
         }
     }

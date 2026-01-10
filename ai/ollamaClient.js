@@ -1,6 +1,6 @@
 import { promptResumeAnalysis } from "../prompt/resumeAnalysis.js";
 import axios from "axios";
-export async function analyzeJob(candidateProfile, jobData){
+export async function analyzeJob(candidateProfile, jobData , url){
     console.log("💡 Starting Ollama job analysis...");
 const prompt = promptResumeAnalysis(candidateProfile, jobData);
 // console.log("💡 Prompt prepared for Ollama.",jobData);
@@ -103,8 +103,8 @@ const res = await axios.post(process.env.OLLAMA_HOST + "/api/generate", {
     throw new Error("No valid JSON in Ollama response");
   }
 
-  console.log("💡 Ollama analysis complete", value);
-  return value;
+  console.log("💡 Ollama analysis complete", {...value,url});
+  return {...value, url};
 }catch(err){
     console.error("❌ Ollama error:", err.message);
     return {
