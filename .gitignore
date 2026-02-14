@@ -1,5 +1,7 @@
 /node_modules
 /.devcontainer
+/.env
+/env.local
 /.vscode
 .DS_Store
 /npm-debug.log*
