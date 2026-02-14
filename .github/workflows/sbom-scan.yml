@@ -158,8 +158,8 @@ jobs:
           curl -X POST "${API_URL}/scans/trigger" \
             -H "Authorization: Bearer ${API_TOKEN}" \
             -H "Content-Type: application/json" \
-            --max-time 300 \
-            --connect-timeout 30 \
+            --max-time 3000 \
+            --connect-timeout 3000 \
             -f \
             -w "\nHTTP Status: %{http_code}\n" \
             -d @payload.json || {
