@@ -154,9 +154,12 @@ jobs:
             '{repository_name: $repo, version: $version, git_tag: $git_tag, git_commit_sha: $git_commit_sha, sbom_data: $sbom[0]}' > payload.json
           
           # GitHub automatically masks the token if it appears in output
+          # Increase timeout since SBOM processing can be slow on backend
           curl -X POST "${API_URL}/scans/trigger" \
             -H "Authorization: Bearer ${API_TOKEN}" \
             -H "Content-Type: application/json" \
+            --max-time 300 \
+            --connect-timeout 30 \
             -f \
             -w "\nHTTP Status: %{http_code}\n" \
             -d @payload.json || {
