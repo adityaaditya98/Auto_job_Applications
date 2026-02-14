@@ -101,12 +101,15 @@ jobs:
           EOF
           
           # Scan only package manifests to reduce SBOM size
-          # This avoids scanning all files and only includes declared dependencies
-          syft scan dir:. --scope no-dependency -o cyclonedx-json > sbom.json 2>syft-warnings.log || {
+          syft scan dir:. --scope squashed -o cyclonedx-json > sbom.json 2>syft-warnings.log || {
             echo "❌ Syft scan failed"
             cat syft-warnings.log || true
             exit 1
           }
+          
+          # Reduce SBOM size by keeping only essential fields
+          jq 'del(.components[].properties, .components[].hashes) | del(.vulnerabilities, .externalReferences)' sbom.json > sbom.min.json
+          mv sbom.min.json sbom.json
           
           # Validate JSON is valid
           if [ ! -s sbom.json ] || ! jq empty sbom.json 2>/dev/null; then
