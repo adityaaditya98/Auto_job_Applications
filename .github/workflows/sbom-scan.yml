@@ -144,18 +144,14 @@ jobs:
           echo "✅ Repository: ${{ github.repository }}"
           echo "✅ Version: ${{ steps.version.outputs.version }}"
           
-          # Create payload file to avoid "Argument list too long" error with large SBOM files
-          # Convert SBOM to string and create payload
-          SBOM_DATA=$(cat sbom.json | jq -c .)
-          cat > payload.json << EOF
-          {
-            "repository_name": "${{ github.repository }}",
-            "version": "${{ steps.version.outputs.version }}",
-            "git_tag": "${{ steps.version.outputs.git_tag }}",
-            "git_commit_sha": "${{ steps.version.outputs.git_commit_sha }}",
-            "sbom_data": "$SBOM_DATA"
-          }
-          EOF
+          # Create payload file using jq to properly handle JSON formatting
+          jq -n \
+            --arg repo "${{ github.repository }}" \
+            --arg version "${{ steps.version.outputs.version }}" \
+            --arg git_tag "${{ steps.version.outputs.git_tag }}" \
+            --arg git_commit_sha "${{ steps.version.outputs.git_commit_sha }}" \
+            --slurpfile sbom sbom.json \
+            '{repository_name: $repo, version: $version, git_tag: $git_tag, git_commit_sha: $git_commit_sha, sbom_data: $sbom[0]}' > payload.json
           
           # GitHub automatically masks the token if it appears in output
           curl -X POST "${API_URL}/scans/trigger" \
