@@ -152,7 +152,31 @@ jobs:
             "git_tag": "${{ steps.version.outputs.git_tag }}",
             "git_commit_sha": "${{ steps.version.outputs.git_commit_sha }}",
             "sbom_data": $(cat sbom.json)
-          }
+          }          - name: Generate SBOM
+            id: sbom
+            run: |
+              cat > .syftignore << EOF
+              .github/
+              .git/
+              .next/
+              out/
+              __pycache__/
+              *.pyc
+              .venv/
+              venv/
+              .env*
+              node_modules/
+              dist/
+              build/
+              coverage/
+              EOF
+              
+              # Only scan production dependencies
+              syft scan dir:. --scope all-layers -o cyclonedx-json > sbom.json 2>syft-warnings.log || {
+                echo "❌ Syft scan failed"
+                cat syft-warnings.log || true
+                exit 1
+              }
           EOF
           
           # GitHub automatically masks the token if it appears in output
