@@ -163,17 +163,41 @@ jobs:
             '{repository_name: $repo, version: $version, git_tag: $git_tag, git_commit_sha: $git_commit_sha, sbom_data: $sbom[0]}' > payload.json
           
           # GitHub automatically masks the token if it appears in output
-          # Increase timeout since SBOM processing can be slow on backend
-          curl -X POST "${API_URL}/scans/trigger" \
-            -H "Authorization: Bearer ${API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --max-time 3000 \
-            --connect-timeout 3000 \
-            -f \
-            -w "\nHTTP Status: %{http_code}\n" \
-            -d @payload.json || {
-              echo "❌ Failed to upload SBOM to backend"
-              exit 1
-            }
+          # Add retry logic with exponential backoff for transient failures
+          MAX_ATTEMPTS=3
+          ATTEMPT=1
           
-          echo "✅ SBOM uploaded successfully!"
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "📤 Attempt $ATTEMPT/$MAX_ATTEMPTS - Uploading SBOM to backend..."
+            
+            HTTP_CODE=$(curl -X POST "${API_URL}/scans/trigger" \
+              -H "Authorization: Bearer ${API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              --max-time 60 \
+              --connect-timeout 10 \
+              -w "%{http_code}" \
+              -o response.json \
+              -d @payload.json 2>&1)
+            
+            if [ "$HTTP_CODE" == "200" ] || [ "$HTTP_CODE" == "201" ]; then
+              echo "✅ SBOM uploaded successfully! (HTTP $HTTP_CODE)"
+              cat response.json
+              exit 0
+            elif [ "$HTTP_CODE" == "504" ] || [ "$HTTP_CODE" == "503" ]; then
+              echo "⚠️ Backend temporarily unavailable (HTTP $HTTP_CODE)"
+              if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                WAIT_TIME=$((30 * ATTEMPT))
+                echo "⏳ Waiting ${WAIT_TIME}s before retry..."
+                sleep $WAIT_TIME
+              fi
+            else
+              echo "❌ Failed to upload SBOM (HTTP $HTTP_CODE)"
+              cat response.json
+              exit 1
+            fi
+            
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+          
+          echo "❌ Failed to upload SBOM to backend after $MAX_ATTEMPTS attempts"
+          exit 1
