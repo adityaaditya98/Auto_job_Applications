@@ -7,8 +7,9 @@ const prompt = promptResumeAnalysis(candidateProfile, jobData);
 // console.log("checking job data in ollama client:",jobData);
 try{
 const res = await axios.post(process.env.OLLAMA_HOST + "/api/generate", {
-  model: "deepseek-r1:1.5b",
+  model: "llama3:8b-instruct-q4_K_M",
   prompt: prompt,
+  temperature: 0,
   stream: false
 });
 
