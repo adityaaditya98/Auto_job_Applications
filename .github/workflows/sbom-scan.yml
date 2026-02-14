@@ -145,38 +145,16 @@ jobs:
           echo "✅ Version: ${{ steps.version.outputs.version }}"
           
           # Create payload file to avoid "Argument list too long" error with large SBOM files
+          # Convert SBOM to string and create payload
+          SBOM_DATA=$(cat sbom.json | jq -c .)
           cat > payload.json << EOF
           {
             "repository_name": "${{ github.repository }}",
             "version": "${{ steps.version.outputs.version }}",
             "git_tag": "${{ steps.version.outputs.git_tag }}",
             "git_commit_sha": "${{ steps.version.outputs.git_commit_sha }}",
-            "sbom_data": $(cat sbom.json)
-          }          - name: Generate SBOM
-            id: sbom
-            run: |
-              cat > .syftignore << EOF
-              .github/
-              .git/
-              .next/
-              out/
-              __pycache__/
-              *.pyc
-              .venv/
-              venv/
-              .env*
-              node_modules/
-              dist/
-              build/
-              coverage/
-              EOF
-              
-              # Only scan production dependencies
-              syft scan dir:. --scope all-layers -o cyclonedx-json > sbom.json 2>syft-warnings.log || {
-                echo "❌ Syft scan failed"
-                cat syft-warnings.log || true
-                exit 1
-              }
+            "sbom_data": "$SBOM_DATA"
+          }
           EOF
           
           # GitHub automatically masks the token if it appears in output
