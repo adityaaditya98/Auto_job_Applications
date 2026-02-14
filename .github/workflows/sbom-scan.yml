@@ -88,15 +88,21 @@ jobs:
           .git/
           .next/
           out/
+          dist/
+          build/
+          node_modules/
           __pycache__/
           *.pyc
           .venv/
           venv/
           .env*
+          *.log
+          coverage/
           EOF
           
-          # Scan the entire directory - syft will auto-detect npm packages from package-lock.json
-          syft scan dir:. --scope all-layers -o cyclonedx-json > sbom.json 2>syft-warnings.log || {
+          # Scan only package manifests to reduce SBOM size
+          # This avoids scanning all files and only includes declared dependencies
+          syft scan dir:. --scope no-dependency -o cyclonedx-json > sbom.json 2>syft-warnings.log || {
             echo "❌ Syft scan failed"
             cat syft-warnings.log || true
             exit 1
