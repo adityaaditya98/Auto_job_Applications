@@ -1,74 +1,132 @@
 export const candidateProfile = `
-Name: Aditya Boddu
-Location: Berlin, Germany
-Phone: +49 15510944967
-Email: b.adityaaditya98@gmail.com
+ADITYA BODDU
 
-GitHub: github.com/adityaaditya98
+Backend Softwareentwickler
+Standort: Berlin, Deutschland
+Telefon: +49 1791514405
+E-Mail: b.adityaaditya98@gmail.com
+GitHub: https://github.com/adityaaditya98
+LinkedIn: https://www.linkedin.com/in/aditya-boddu/
 
-👨‍💻 Professional Summary
+PROFIL
 
-Full-stack software developer with 2 years of experience in frontend and backend development using Node.js, Spring Boot, PostgreSQL. Skilled in Java, JavaScript, HTML, CSS, RESTful API development, and secure system design using JWT, 2FA, RBAC. Experience with OpenNMS API, SNMP v3, real-time network monitoring systems, Microservices, NestJS, MySQL, DevOps, and Agile methodologies.
+Backend-Softwareentwickler mit 3 Jahren Berufserfahrung in der Entwicklung skalierbarer Webanwendungen mit Java, Spring Boot und Node.js. Erfahrung in der Entwicklung von RESTful APIs, Cloud-basierten Anwendungen mit AWS sowie in Such- und Datenverarbeitungssystemen mit Elasticsearch und MySQL. Nachgewiesene Fähigkeit, End-to-End-Projekte eigenständig umzusetzen und produktionsreife Lösungen termingerecht bereitzustellen. Aktuell wohnhaft in Berlin mit gültiger Opportunity Card und Deutschkenntnissen auf A2–B1 Niveau. Ziel ist es, meine Backend- und Cloud-Expertise im deutschen Technologiesektor einzubringen.
 
-Top 5% on LeetCode with 300+ problems solved. Strong background in scalable system development, performance optimization, and cloud deployment on AWS (EC2, S3, RDS, Lambda).
+SPRACHKENNTNISSE
 
-🌐 Languages
+Deutsch: A2–B1 (Selbstständige Sprachverwendung)
+Englisch: Fließend (Berufliche Nutzung)
+Telugu: Muttersprache
+Hindi: Fließend
 
-German (Elementary)
-English (Fluent)
-Telugu (Native)
-Hindi (Native)
+TECHNISCHE FÄHIGKEITEN
 
-🏢 Experience
+Programmiersprachen:
+• Java
+• JavaScript
 
-Software Developer – Urbanfox Turnkey Solutions Pvt Ltd (India)
-Sept 2023 – Present
+Backend-Technologien:
+• Spring Boot
+• Node.js
+• Express.js
+• NestJS
+• RESTful APIs
 
-Replaced OpenNMS with custom service discovery, improving detection accuracy by 60%.
+Frontend:
+• React.js
+• HTML
+• CSS
+• Bootstrap
 
-Built topology builder to manage network relationships (40% fewer config errors).
+Datenbanken:
+• MySQL
+• PostgreSQL
+• Elasticsearch
 
-Designed real-time dashboards for monitoring servers & databases.
+Cloud & DevOps:
+• AWS (EC2, S3, RDS, Lambda, SES)
+• Docker
+• CI/CD Konzepte
+• Git, GitHub
 
-Implemented SNMP metric extraction and exporters (Postgres, MySQL, MongoDB, Windows).
+Softwarearchitektur & Sicherheit:
+• Microservices Architektur
+• JWT Authentication
+• Role-Based Access Control (RBAC)
+• API Security
+• System Design Grundlagen
+• Clean Code und SOLID Prinzipien
 
-Built alerting systems via Email, SMS, Slack with JWT, 2FA, RBAC.
+Testing:
+• Unit Testing mit JUnit
 
-Optimized backend scalability and deployed services to AWS.
+Methoden & Tools:
+• Agile / Scrum
+• Swagger API Dokumentation
+• Linux und Windows
 
-🛠 Skills
+KI / Automation:
+• Backend Textverarbeitung
+• Automation Logik
+• Grundlagen der KI-Integration
 
-Full-Stack Development, REST APIs, Java, JavaScript, Node.js, Spring Boot, NestJS, PostgreSQL, MySQL, JWT, RBAC, 2FA, AWS, Docker, Git, GitHub, Linux, CI/CD, Network Monitoring, System Design, Agile.
+BERUFSERFAHRUNG
 
-🏗 Projects
+Softwareentwickler
+Supath Info Technologies Pvt Ltd, Indien
+Januar 2023 – Januar 2026
 
-Secure Storage with Key Update for IoT Devices
+• Entwicklung und Wartung einer skalierbaren E-Commerce-Plattform mit Spring Boot und AWS
+• Entwicklung von RESTful APIs zur Unterstützung von Webanwendungen
+• Implementierung einer Suchfunktion mit Elasticsearch zur Verbesserung der Produktsuche
+• Entwicklung einer Synchronisationspipeline zwischen MySQL und Elasticsearch
+• Integration von AWS SES zur automatischen Versendung von Kundenbenachrichtigungen
+• Entwicklung eines Reporting-Tools zur Generierung von CSV- und Excel-Berichten
+• Durchführung von Produktionsdeployments und Minimierung von Ausfallzeiten
+• Eigenständige Umsetzung mehrerer End-to-End-Projekte von der Anforderung bis zum Deployment
+• Durchführung von Code Reviews zur Verbesserung der Codequalität
 
-Built encrypted data storage with dynamic key updates.
+PROJEKTE
 
-Implemented cryptographic security mechanisms.
+KI-gestütztes News Backend
 
-Technologies: Java (Spring), JavaScript, MySQL.
+• Entwicklung eines Backend-Systems zur Verarbeitung und Analyse von Nachrichtenartikeln
+• Entwicklung von REST APIs mit Node.js
+• Implementierung von Session-Management und Datenverarbeitung
+• Nutzung von Regex und Backend-Automation
+• Modularer und skalierbarer Backend-Aufbau
+
+IoT Secure Storage System
+
+• Entwicklung einer sicheren Webanwendung zur Speicherung von IoT-Daten
+• Implementierung von Verschlüsselung und Schlüsselmanagement
+• Sicherstellung von Datenintegrität und Zugriffssicherheit
 
 Student Management System
 
-Full Spring Boot CRUD system with MySQL backend.
+• Entwicklung eines Backend-Systems mit Spring Boot
+• Implementierung von REST APIs und CRUD Operationen
+• Integration mit MySQL Datenbank
+• Verwendung von MVC Architektur
 
-Designed REST APIs and admin web UI.
+AUSBILDUNG
 
-Technologies: Java (Spring), JavaScript, MySQL.
+Master of Computer Applications (MCA)
+Koneru Lakshmaiah Education Foundation, Indien
+Abschluss: 2023
 
-🎓 Education
+Bachelor of Commerce (Computer Applications)
+Osmania University, Indien
+Abschluss: 2021
 
-MCA (Master Of Computer Applications) – KLEF University, Andhra Pradesh (2023)
+ZERTIFIKATE & ERFOLGE
 
-B.Com Computer Applications – Osmania University (2021)
+AWS Academy Graduate – Cloud Foundations
 
-🏅 Certifications
+Top 5% auf LeetCode
+• 300+ gelöste Probleme in Datenstrukturen und Algorithmen
 
-AWS Academy Cloud Foundations
-Java (Basic) – HackerRank
-DSA – Coding Mafia
-Full-Stack Java Developer – JSpiders (Dec 2023 – Jul 2024)
+5. Platz – AVANT-GARDE Hackathon
+
+HackerRank Java und C Zertifikate
 `;
-

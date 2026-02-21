@@ -67,6 +67,20 @@ app.post("/testUrl", async (req, res) => {
     }
 });
 
+app.post("/textAnalyze",async(req,res)=>{
+    const { data } = req.body;
+    console.log("Received request to analyze job description.", data);
+    try{
+    const response = await axios.post("http://localhost:3000/api/analyze-jobs-local", {
+        jobDataDescription: data,
+    });
+    return res.status(200).json({ message: "Analysis request sent", data: response.data });
+    }catch(error){
+        console.error("Error sending analysis request:", error.response ? error.response.data : error.message);
+        return res.status(500).json({ message: "Error sending analysis request", error: error.response ? error.response.data : error.message });
+    }
+})
+
 
 app.get("/analyzeJobs", async (req, res) => {
     console.log("Received request to analyze jobs.");
