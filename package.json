@@ -24,5 +24,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
+  },
+  "scripts": {
+    "start": "node launcher.js",
+    "start:server": "node index.js",
+    "start:workers": "node works/index.js",
+    "dev": "nodemon launcher.js",
+    "dev:server": "nodemon index.js",
+    "dev:workers": "nodemon works/index.js"
   }
 }

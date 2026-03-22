@@ -1,118 +1,287 @@
+import { getLLMProvider } from "./llmProviderFactory.js";
+import { promptJobMarketAnalysis } from "../prompt/jobMarketAnalysis.js";
 import { promptResumeAnalysis } from "../prompt/resumeAnalysis.js";
-import axios from "axios";
-export async function analyzeJob(candidateProfile, jobData , url){
-    console.log("💡 Starting Ollama job analysis...");
-const prompt = promptResumeAnalysis(candidateProfile, jobData);
-// console.log("💡 Prompt prepared for Ollama.",jobData);
-// console.log("checking job data in ollama client:",jobData);
-try{
-const res = await axios.post(process.env.OLLAMA_HOST + "/api/generate", {
-  model: "qwen2.5:7b-instruct",
-  prompt: prompt,
-  temperature: 0,
-  stream: false
-});
 
-  console.log("💡 Ollama analysis response received");
-  // console.log(jobData);
-  // console.log("Ollama response status:", res.status);
-  const data = res.data;
-  let responseText = "";
-  if (typeof data === "string") {
-    responseText = data;
-  } else if (data.response) {
-    responseText = data.response;
-  } else if (data.responses && Array.isArray(data.responses) && data.responses[0]?.content) {
-    responseText = data.responses[0].content;
-  } else {
-    responseText = JSON.stringify(data);
-  }
+const DEFAULT_MODULE_TYPE = process.env.LLM_MODULE_TYPE || "job_analysis";
 
-  const cleaned = responseText.replace(/```json|```/g, "").trim();
+function resolveModuleType(explicitType) {
+  return explicitType || DEFAULT_MODULE_TYPE;
+}
 
-  // Try to parse directly, otherwise attempt robust extraction and sanitization
-  function tryParseOrSanitize(candidate) {
-    try { return JSON.parse(candidate); } catch (e) {
-      // sanitization steps for common model output issues
-      let s = candidate;
-      // remove trailing commas before ] or }
-      s = s.replace(/,\s*(?=[}\]])/g, "");
-      // convert single-quoted simple tokens to double quotes
-      s = s.replace(/([:\[\{,\s])'([^']*?)'(?=[,\]}\s])/g, '$1"$2"');
-      // convert bullet lists inside arrays into JSON arrays
-      s = s.replace(/\[([\s\S]*?)\]/g, (m, inner) => {
-        if (/"|:|,/.test(inner)) return m.replace(/,\s*(?=[\]\}])/g, '');
-        const lines = inner.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        const items = lines.map(l => l.replace(/^[-*]\s*/, '').trim()).filter(Boolean);
-        if (items.length === 0) return m;
-        return JSON.stringify(items);
-      });
-      // handle keys like missing_skills: followed by bullets (no brackets)
-      s = s.replace(/"?missing_skills"?\s*:\s*\n((?:\s*[-*].+\n?)+)/im, (m, bullets) => {
-        const items = bullets.split(/\r?\n/).map(l => l.replace(/^\s*[-*]\s*/, '').trim()).filter(Boolean);
-        return '"missing_skills": ' + JSON.stringify(items);
-      });
-      // wrap bare array items with quotes
-      s = s.replace(/(\[)\s*([^\"\]\[][^\]]*?)\s*(\])/g, (m, open, inner, close) => {
-        const parts = inner.split(/\s*,\s*/).map(p => p.trim()).filter(Boolean).map(p => {
-          if (/^\".*\"$/.test(p) || /^\'.*\'$/.test(p)) return p;
-          return JSON.stringify(p.replace(/^[-*]\s*/, ''));
+function tryParseOrSanitize(candidate) {
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    let sanitized = candidate;
+
+    sanitized = sanitized.replace(/,\s*(?=[}\]])/g, "");
+    sanitized = sanitized.replace(/([:\[{,\s])'([^']*?)'(?=[,\]}\s])/g, '$1"$2"');
+    sanitized = sanitized.replace(/\[([\s\S]*?)\]/g, (match, inner) => {
+      if (/"|:|,/.test(inner)) {
+        return match.replace(/,\s*(?=[\]\}])/g, "");
+      }
+
+      const items = inner
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.replace(/^[-*]\s*/, "").trim())
+        .filter(Boolean);
+
+      return items.length ? JSON.stringify(items) : match;
+    });
+    sanitized = sanitized.replace(/"?missing_skills"?\s*:\s*\n((?:\s*[-*].+\n?)+)/im, (match, bullets) => {
+      const items = bullets
+        .split(/\r?\n/)
+        .map((line) => line.replace(/^\s*[-*]\s*/, "").trim())
+        .filter(Boolean);
+      return '"missing_skills": ' + JSON.stringify(items);
+    });
+    sanitized = sanitized.replace(/(\[)\s*([^"\]\[][^\"]*?)\s*(\])/g, (match, open, inner) => {
+      const parts = inner
+        .split(/\s*,\s*/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => {
+          if (/^".*"$/.test(part) || /^'.*'$/.test(part)) {
+            return part;
+          }
+          return JSON.stringify(part.replace(/^[-*]\s*/, ""));
         });
-        return '[' + parts.join(',') + ']';
-      });
 
-      try { return JSON.parse(s); } catch (e2) { return null; }
+      return open + parts.join(",") + "]";
+    });
+
+    try {
+      return JSON.parse(sanitized);
+    } catch {
+      return null;
     }
   }
+}
+
+function parseStructuredJson(responseText) {
+  const cleaned = responseText.replace(/```json|```/g, "").trim();
 
   let value = tryParseOrSanitize(cleaned);
   if (!value) {
-    // scan for first balanced JSON-like chunk
-    const text = cleaned;
-    for (let i = 0; i < text.length; i++) {
-      if (text[i] === '{' || text[i] === '[') {
-        const startChar = text[i];
-        const endChar = startChar === '{' ? '}' : ']';
-        let depth = 0;
-        for (let j = i; j < text.length; j++) {
-          const ch = text[j];
-          if (ch === startChar) depth++;
-          else if (ch === endChar) depth--;
-          if (depth === 0) {
-            const candidate = text.slice(i, j + 1);
-            const parsed = tryParseOrSanitize(candidate);
-            if (parsed) { value = parsed; break; }
-            break; // try next possible start
+    for (let i = 0; i < cleaned.length; i += 1) {
+      if (cleaned[i] !== "{" && cleaned[i] !== "[") {
+        continue;
+      }
+
+      const startChar = cleaned[i];
+      const endChar = startChar === "{" ? "}" : "]";
+      let depth = 0;
+
+      for (let j = i; j < cleaned.length; j += 1) {
+        const char = cleaned[j];
+        if (char === startChar) depth += 1;
+        if (char === endChar) depth -= 1;
+
+        if (depth === 0) {
+          const candidate = cleaned.slice(i, j + 1);
+          const parsed = tryParseOrSanitize(candidate);
+          if (parsed) {
+            return parsed;
           }
+          break;
         }
       }
-      if (value) break;
     }
   }
 
   if (!value) {
-    // final regex fallback
-    const objMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (objMatch) value = tryParseOrSanitize(objMatch[0]);
-    const arrMatch = !value && cleaned.match(/\[[\s\S]*\]/);
-    if (!value && arrMatch) value = tryParseOrSanitize(arrMatch[0]);
+    const objectMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (objectMatch) {
+      value = tryParseOrSanitize(objectMatch[0]);
+    }
+
+    const arrayMatch = !value && cleaned.match(/\[[\s\S]*\]/);
+    if (!value && arrayMatch) {
+      value = tryParseOrSanitize(arrayMatch[0]);
+    }
   }
 
   if (!value) {
-    console.error("Failed to parse Ollama JSON: no valid JSON found or JSON is malformed after sanitization");
+    console.error("Failed to parse normalized LLM JSON");
     console.error("Raw response:", cleaned);
-    throw new Error("No valid JSON in Ollama response");
+    throw new Error("No valid JSON in normalized LLM response");
   }
 
-  console.log("💡 Ollama analysis complete", {...value,url});
-  return {...value, url};
-}catch(err){
-    console.error("❌ Ollama error:", err.message);
+  return value;
+}
+
+function normalizeStringArray(value) {
+  return Array.isArray(value)
+    ? value.map((item) => String(item).trim()).filter(Boolean)
+    : [];
+}
+
+function normalizeClampedScore(value) {
+  const score = Number(value);
+  if (!Number.isFinite(score)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function normalizeApplyDecision(value) {
+  return String(value).trim().toLowerCase() === "apply" ? "apply" : "skip";
+}
+
+function normalizeMatchedFields(value) {
+  const matchedFields = value && typeof value === "object" ? value : {};
+
+  return {
+    job_titles: normalizeStringArray(matchedFields.job_titles),
+    primary_skills: normalizeStringArray(matchedFields.primary_skills),
+    secondary_skills: normalizeStringArray(matchedFields.secondary_skills),
+    education_level: typeof matchedFields.education_level === "string" ? matchedFields.education_level.trim() : "",
+    certifications: normalizeStringArray(matchedFields.certifications),
+    domain_experience: normalizeStringArray(matchedFields.domain_experience)
+  };
+}
+
+function normalizeCandidateMatchResult(value, url) {
+  const normalized = value && typeof value === "object" ? value : {};
+  const result = {
+    match_score: normalizeClampedScore(normalized.match_score),
+    apply_decision: normalizeApplyDecision(normalized.apply_decision),
+    missing_skills: normalizeStringArray(normalized.missing_skills),
+    matched_fields: normalizeMatchedFields(normalized.matched_fields),
+    reason: typeof normalized.reason === "string" ? normalized.reason.trim() : ""
+  };
+
+  if (typeof url === "string" && url.trim() !== "") {
+    result.url = url.trim();
+  }
+
+  return result;
+}
+
+function getLLMErrorMessage(error, providerName = process.env.LLM_PROVIDER || "ollama") {
+  if (error?.code === "ECONNABORTED") {
+    return `${providerName} request was aborted`;
+  }
+
+  if (error?.code === "ECONNREFUSED") {
+    return `${providerName} host refused the connection`;
+  }
+
+  if (error?.code === "ENOTFOUND") {
+    return `${providerName} host could not be resolved`;
+  }
+
+  return error?.message || `Unknown ${providerName} error`;
+}
+
+async function generateStructuredJson(payload) {
+  const provider = getLLMProvider();
+  const result = await provider.generate({
+    ...payload,
+    moduleType: resolveModuleType(payload?.moduleType)
+  });
+
+  return parseStructuredJson(result.text);
+}
+
+async function generateNormalizedText(payload) {
+  const provider = getLLMProvider();
+  return provider.generate({
+    ...payload,
+    moduleType: resolveModuleType(payload?.moduleType)
+  });
+}
+
+export async function analyzeJob(candidateProfile, jobData, url) {
+  console.log("💡 Starting candidate match analysis...");
+  const prompt = promptResumeAnalysis(candidateProfile, jobData);
+
+  try {
+    const value = await generateStructuredJson({
+      prompt,
+      moduleType: "candidate_match"
+    });
+    const normalized = normalizeCandidateMatchResult(value, url);
+    console.log("💡 LLM analysis complete", normalized);
+    return normalized;
+  } catch (err) {
+    const message = getLLMErrorMessage(err, process.env.LLM_PROVIDER || "ollama");
+    console.error("❌ LLM error:", message);
+    return normalizeCandidateMatchResult({
+      match_score: 0,
+      apply_decision: "skip",
+      missing_skills: [],
+      matched_fields: {
+        job_titles: [],
+        primary_skills: [],
+        secondary_skills: [],
+        education_level: "",
+        certifications: [],
+        domain_experience: []
+      },
+      reason: message
+    }, url);
+  }
+}
+
+export async function analyzeJobMarket(jobDescription) {
+  console.log("💡 Starting job analysis...");
+  const prompt = promptJobMarketAnalysis(jobDescription);
+
+  try {
+    const value = await generateStructuredJson({
+      prompt,
+      moduleType: "job_analysis"
+    });
     return {
-        match_score: 0,
-        apply_decision: "skip",
-        missing_skills: [],
-        reason: "Ollama error or quota exceeded"
-      };
-    }
+      skills: normalizeStringArray(value.skills),
+      experience_required: typeof value.experience_required === "string" ? value.experience_required.trim() : "",
+      tech_stack: normalizeStringArray(value.tech_stack),
+      job_level: typeof value.job_level === "string" ? value.job_level.trim() : "",
+      responsibilities: normalizeStringArray(value.responsibilities),
+      keywords: normalizeStringArray(value.keywords)
+    };
+  } catch (err) {
+    console.error("❌ LLM analysis error:", getLLMErrorMessage(err, process.env.LLM_PROVIDER || "ollama"));
+    return {
+      skills: [],
+      experience_required: "",
+      tech_stack: [],
+      job_level: "",
+      responsibilities: [],
+      keywords: []
+    };
+  }
+}
+
+export async function runConfiguredLLMModule(payload = {}) {
+  const moduleType = resolveModuleType(payload.moduleType);
+
+  if (moduleType === "candidate_match") {
+    return analyzeJob(payload.candidateProfile, payload.jobData || payload.jobDescription || payload.prompt, payload.url);
+  }
+
+  if (moduleType === "job_analysis") {
+    return analyzeJobMarket(payload.jobDescription || payload.jobData || payload.prompt || "");
+  }
+
+  if (moduleType === "chat") {
+    const result = await generateNormalizedText({
+      prompt: payload.prompt || payload.jobDescription || payload.jobData || "",
+      messages: payload.messages,
+      moduleType
+    });
+
+    return {
+      response: result.text,
+      reasoning_content: result.reasoning_content,
+      provider: result.provider,
+      moduleType
+    };
+  }
+
+  throw new Error(`Unsupported LLM module type: ${moduleType}`);
 }

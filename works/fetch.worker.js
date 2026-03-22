@@ -1,30 +1,27 @@
 import "dotenv/config";
 import { Worker } from "bullmq";
-import { connection } from "../redis.js";
-import { fetchJobDetails, getJobDetailsInformation } from "../service.js";
-import { jobAnalysisLocalQueue } from "../jobQueue.js";
-import { candidateProfile } from "../candidateDescription.js";
+import { fetchJobDetails } from "../service.js";
+import { attachWorkerLogging, buildWorkerOptions } from "../bullmq.config.js";
 
-console.log("🚀 Fetch Worker started (fetch-jobs)");
+console.log("Fetch Worker started (fetch-jobs)");
 
-new Worker(
-  "fetch-jobs",
-  async (job) => {
-    console.log("Processing fetch job:", job.id, job.data);
-    const page = Number(job.data.page || 0);
-    const jobs = await fetchJobDetails(page);
+export const fetchWorker = attachWorkerLogging(
+  new Worker(
+    "fetch-jobs",
+    async (job) => {
+      console.log("Processing fetch job:", job.id, job.data);
+      const page = Number(job.data.page || 0);
+      const jobs = await fetchJobDetails(page);
 
-    if (!jobs || jobs.length === 0) {
-      console.log("No jobs found on page", page);
-      return { jobs: [] };
-    }
+      if (!jobs || jobs.length === 0) {
+        console.log("No jobs found on page", page);
+        return { jobs: [] };
+      }
 
-    // simply return the raw job list; downstream handlers can enqueue further work
-    console.log(`Fetched ${jobs.length} jobs from page ${page}`);
-    return { jobs, page };
-  },
-  {
-    connection: connection,
-    concurrency: 1
-  }
+      console.log("Fetched " + jobs.length + " jobs from page " + page);
+      return { jobs, page };
+    },
+    buildWorkerOptions({ concurrency: 1 })
+  ),
+  "fetch-jobs"
 );

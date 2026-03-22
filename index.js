@@ -7,9 +7,7 @@ import { connection } from './redis.js';
 import { QueueEvents } from 'bullmq';
 import queueAdminRoute from './route/queue.route.js';
 import analyzeRoute from "./route/analyze.route.js";
-import "./works/jobAnalysis.worker.js";
-import "./works/fetch.worker.js";
-import "./works/extract.worker.js";
+import jobsRoute from "./route/jobs.route.js";
 // import dummy from './dummy.json' assert { type: "json" };
 const app = express();
 app.use(express.json());
@@ -166,6 +164,7 @@ app.get("/setAi", async (req, res) => {
     }
 });
 
+app.use("/jobs", jobsRoute);
 app.use("/api", analyzeRoute);
 app.use("/api", queueAdminRoute);
 
